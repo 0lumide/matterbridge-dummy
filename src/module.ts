@@ -50,6 +50,8 @@ export default function initializePlugin(matterbridge: PlatformMatterbridge, log
 
 export class DummyPlatform extends MatterbridgeDynamicPlatform {
   private devices: Record<string, DummyConfig>;
+  // Track timers to clear them on shutdown.
+  private autoOffTimers: NodeJS.Timeout[] = [];
   readonly bridgedDevices = new Map<string, MatterbridgeEndpoint>();
 
   constructor(matterbridge: PlatformMatterbridge, log: AnsiLogger, config: DummyPlatformConfig) {
@@ -103,13 +105,17 @@ export class DummyPlatform extends MatterbridgeDynamicPlatform {
           this.log.info(`Device ${deviceName} on handler triggered.`);
           if (device.autoOffDelayMs == 0) {
             await matterDevice.setAttribute('onOff', 'onOff', false, matterDevice.log);
+            this.log.notice(`Device ${deviceName} on ignored.`);
           } else {
             await matterDevice.setAttribute('onOff', 'onOff', true, matterDevice.log);
+            this.log.notice(`Device ${deviceName} turned on.`);
           }
           if (device.autoOffDelayMs > 0) {
-            setTimeout(async () => {
+            const timer = setTimeout(async () => {
               await matterDevice.setAttribute('onOff', 'onOff', false, matterDevice.log);
+              this.log.notice(`Device ${deviceName} turned off.`);
             }, device.autoOffDelayMs);
+            this.autoOffTimers.push(timer);
           }
         })
         .addCommandHandler('off', async () => {
@@ -133,6 +139,8 @@ export class DummyPlatform extends MatterbridgeDynamicPlatform {
   override async onShutdown(reason?: string): Promise<void> {
     await super.onShutdown(reason);
     this.log.info('onShutdown called with reason:', reason ?? 'none');
+    this.autoOffTimers.forEach((timer) => clearTimeout(timer));
+    this.autoOffTimers = [];
     if (this.config.unregisterOnShutdown === true) await this.unregisterAllDevices();
     this.bridgedDevices.clear();
   }
