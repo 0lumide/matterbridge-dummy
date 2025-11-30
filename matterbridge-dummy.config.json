@@ -1,0 +1,8 @@
+{
+  "name": "matterbridge-dummy",
+  "type": "DynamicPlatform",
+  "version": "0.0.1",
+  "devices": {},
+  "debug": false,
+  "unregisterOnShutdown": false
+}

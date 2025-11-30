@@ -1,0 +1,60 @@
+
+{
+  "title": "Matterbridge Dummy devices plugin",
+  "description": "matterbridge-dummy v. 0.0.1 by https://github.com/0lumide",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "Plugin name",
+      "type": "string",
+      "readOnly": true,
+      "ui:widget": "hidden"
+    },
+    "type": {
+      "description": "Plugin type",
+      "type": "string",
+      "readOnly": true,
+      "ui:widget": "hidden"
+    },
+    "version": {
+      "description": "Plugin version",
+      "type": "string",
+      "readOnly": true,
+      "default": "0.0.1",
+      "ui:widget": "hidden"
+    },
+    "devices": {
+      "description": "Define each device. Enter in the first field the name of the webhook (replace newKey with the name of the device) and in the right panel the parameters.",
+      "type": "object",
+      "uniqueItems": true,
+      "additionalProperties": {
+        "type": "object",
+        "description": "Webhook parameters:",
+        "required": ["deviceType", "autoOffDelayMs"],
+        "properties": {
+          "deviceType": {
+            "type": "string",
+            "default": "Outlet",
+            "enum": ["Outlet", "Switch", "Light"],
+            "description": "Select how to represent the webhooks on the controller. Don't use Switch for Alexa."
+          },
+          "autoOffDelayMs": {
+            "type": "integer",
+            "default": 5000,
+            "description": "Delay in milliseconds to automatically turn off the device after being turned on. Set to 0 to immediately turn device off. Set to negative number to disable auto off."
+          }
+        }
+      }
+    },
+    "debug": {
+      "description": "Enable the debug for the plugin.",
+      "type": "boolean",
+      "default": false
+    },
+    "unregisterOnShutdown": {
+      "description": "Unregister all devices on shutdown. This will remove all devices from the controller when the plugin is stopped.",
+      "type": "boolean",
+      "default": false
+    }
+  }
+}
