@@ -5,7 +5,7 @@ import { AnsiLogger, LogLevel } from 'matterbridge/logger';
 import { MatterbridgeEndpoint, PlatformConfig, PlatformMatterbridge, SystemInformation } from 'matterbridge';
 import { VendorId } from 'matterbridge/matter';
 
-import { TemplatePlatform } from '../src/module.ts';
+import { DummyPlatform, DummyPlatformConfig } from '../src/module.ts';
 
 const mockLog = {
   fatal: jest.fn((message: string, ...parameters: any[]) => {}),
@@ -23,12 +23,12 @@ const mockMatterbridge: PlatformMatterbridge = {
     osRelease: 'x.y.z',
     nodeVersion: '22.10.0',
   } as unknown as SystemInformation,
-  rootDirectory: path.join('jest', 'TemplatePlugin'),
-  homeDirectory: path.join('jest', 'TemplatePlugin'),
-  matterbridgeDirectory: path.join('jest', 'TemplatePlugin', '.matterbridge'),
-  matterbridgePluginDirectory: path.join('jest', 'TemplatePlugin', 'Matterbridge'),
-  matterbridgeCertDirectory: path.join('jest', 'TemplatePlugin', '.mattercert'),
-  globalModulesDirectory: path.join('jest', 'TemplatePlugin', 'node_modules'),
+  rootDirectory: path.join('jest', 'DummyPlugin'),
+  homeDirectory: path.join('jest', 'DummyPlugin'),
+  matterbridgeDirectory: path.join('jest', 'DummyPlugin', '.matterbridge'),
+  matterbridgePluginDirectory: path.join('jest', 'DummyPlugin', 'Matterbridge'),
+  matterbridgeCertDirectory: path.join('jest', 'DummyPlugin', '.mattercert'),
+  globalModulesDirectory: path.join('jest', 'DummyPlugin', 'node_modules'),
   matterbridgeVersion: '3.3.0',
   matterbridgeLatestVersion: '3.3.0',
   matterbridgeDevVersion: '3.3.0',
@@ -44,18 +44,19 @@ const mockMatterbridge: PlatformMatterbridge = {
   removeAllBridgedEndpoints: jest.fn(async (pluginName: string) => {}),
 } as unknown as PlatformMatterbridge;
 
-const mockConfig: PlatformConfig = {
-  name: 'matterbridge-plugin-template',
+const mockConfig: DummyPlatformConfig = {
+  name: 'matterbridge-dummy',
   type: 'DynamicPlatform',
-  version: '1.0.0',
+  version: '0.0.1',
   debug: false,
   unregisterOnShutdown: false,
+  devices: {},
 };
 
 const loggerLogSpy = jest.spyOn(AnsiLogger.prototype, 'log').mockImplementation((level: string, message: string, ...parameters: any[]) => {});
 
-describe('Matterbridge Plugin Template', () => {
-  let instance: TemplatePlatform;
+describe('Matterbridge Dummy Devices', () => {
+  let instance: DummyPlatform;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -66,16 +67,18 @@ describe('Matterbridge Plugin Template', () => {
   });
 
   it('should throw an error if matterbridge is not the required version', async () => {
-    mockMatterbridge.matterbridgeVersion = '2.0.0'; // Simulate an older version
-    expect(() => new TemplatePlatform(mockMatterbridge, mockLog, mockConfig)).toThrow(
+    const oldMockMatterbridge: PlatformMatterbridge = {
+      ...mockMatterbridge,
+      matterbridgeVersion: '2.0.0',
+    };
+    expect(() => new DummyPlatform(oldMockMatterbridge, mockLog, mockConfig)).toThrow(
       'This plugin requires Matterbridge version >= "3.3.0". Please update Matterbridge from 2.0.0 to the latest version in the frontend.',
     );
-    mockMatterbridge.matterbridgeVersion = '3.3.0';
   });
 
   it('should create an instance of the platform', async () => {
-    instance = (await import('../src/module.ts')).default(mockMatterbridge, mockLog, mockConfig) as TemplatePlatform;
-    expect(instance).toBeInstanceOf(TemplatePlatform);
+    instance = (await import('../src/module.ts')).default(mockMatterbridge, mockLog, mockConfig) as DummyPlatform;
+    expect(instance).toBeInstanceOf(DummyPlatform);
     expect(instance.matterbridge).toBe(mockMatterbridge);
     expect(instance.log).toBe(mockLog);
     expect(instance.config).toBe(mockConfig);
@@ -120,7 +123,7 @@ describe('Matterbridge Plugin Template', () => {
     mockConfig.unregisterOnShutdown = true;
     await instance.onShutdown();
     expect(mockLog.info).toHaveBeenCalledWith('onShutdown called with reason: none');
-    expect(mockMatterbridge.removeAllBridgedEndpoints).toHaveBeenCalled();
+    expect((mockMatterbridge as any).removeAllBridgedEndpoints).toHaveBeenCalled();
     mockConfig.unregisterOnShutdown = false;
   });
 });
