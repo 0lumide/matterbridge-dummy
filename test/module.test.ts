@@ -2,14 +2,11 @@ const MATTER_PORT = 6000;
 const NAME = 'Platform';
 const HOMEDIR = path.join('jest', NAME);
 
-import { AddressInfo } from 'node:net';
 import path from 'node:path';
 
 import { jest } from '@jest/globals';
 import { wait } from 'matterbridge/utils';
 import { LogLevel } from 'matterbridge/logger';
-
-import initializePlugin, { DummyPlatform, DummyPlatformConfig } from '../src/module.js';
 import {
   addBridgedEndpointSpy,
   addMatterbridgePlatform,
@@ -21,16 +18,15 @@ import {
   setupTest,
   startMatterbridgeEnvironment,
   stopMatterbridgeEnvironment,
-} from '../src/utils/jestHelpers.js';
+} from 'matterbridge/jestutils';
+
+import initializePlugin, { DummyPlatform, DummyPlatformConfig } from '../src/module.js';
 
 // Setup the test environment
-setupTest(NAME, false);
+await setupTest(NAME, false);
 
 describe('TestPlatform', () => {
   let platform: DummyPlatform;
-
-  let port: number;
-  let baseUrl: string;
 
   const config: DummyPlatformConfig = {
     name: 'matterbridge-dummy',
@@ -81,9 +77,9 @@ describe('TestPlatform', () => {
   it('should throw error in load when version is not valid', () => {
     matterbridge.matterbridgeVersion = '1.5.0';
     expect(() => new DummyPlatform(matterbridge, log, config)).toThrow(
-      'This plugin requires Matterbridge version >= "3.3.0". Please update Matterbridge to the latest version in the frontend.',
+      'This plugin requires Matterbridge version >= "3.4.0". Please update Matterbridge to the latest version in the frontend.',
     );
-    matterbridge.matterbridgeVersion = '3.3.0';
+    matterbridge.matterbridgeVersion = '3.4.0';
   });
 
   it('should initialize platform with config name', () => {
